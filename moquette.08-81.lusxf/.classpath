@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="lib" path="../../../../lusagent-core/lus-java/target/lus.java-1.0.0-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="../../../moquette/dsu/moquette-0.8.1/distribution/target/distribution-0.8.1-bundle-tar/lib/mapdb-1.0.8.jar"/>
+	<classpathentry kind="lib" path="../../../moquette/dsu/moquette-0.8.1/distribution/target/distribution-0.8.1-bundle-tar/lib/netty-buffer-4.0.33.Final.jar"/>
+	<classpathentry kind="lib" path="../../../moquette/dsu/moquette-0.8.1/distribution/target/distribution-0.8.1-bundle-tar/lib/netty-codec-4.0.33.Final.jar"/>
+	<classpathentry kind="lib" path="../../../moquette/dsu/moquette-0.8.1/distribution/target/distribution-0.8.1-bundle-tar/lib/netty-codec-http-4.0.33.Final.jar"/>
+	<classpathentry kind="lib" path="../../../moquette/dsu/moquette-0.8.1/distribution/target/distribution-0.8.1-bundle-tar/lib/netty-common-4.0.33.Final.jar"/>
+	<classpathentry kind="lib" path="../../../moquette/dsu/moquette-0.8.1/distribution/target/distribution-0.8.1-bundle-tar/lib/netty-handler-4.0.33.Final.jar"/>
+	<classpathentry kind="lib" path="../../../moquette/dsu/moquette-0.8.1/distribution/target/distribution-0.8.1-bundle-tar/lib/netty-transport-4.0.33.Final.jar"/>
+	<classpathentry kind="lib" path="../../../moquette/dsu/moquette-0.8.1/distribution/target/distribution-0.8.1-bundle-tar/lib/commons-codec-1.10.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

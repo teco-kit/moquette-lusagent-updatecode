@@ -1,0 +1,39 @@
+v0="../../moquette/dsu/moquette-0.8/distribution/target/distribution-0.8-bundle-tar/lib/moquette-broker-0.8.jar;../../moquette/dsu/moquette-0.8/distribution/target/distribution-0.8-bundle-tar/lib/moquette-netty-parser-0.8.jar;../../moquette/dsu/moquette-0.8/distribution/target/distribution-0.8-bundle-tar/lib/moquette-parser-commons-0.8.jar";
+v1="../../moquette/dsu/moquette-0.8.1/distribution/target/distribution-0.8.1-bundle-tar/lib/moquette-broker-0.8.1.jar;../../moquette/dsu/moquette-0.8.1/distribution/target/distribution-0.8.1-bundle-tar/lib/moquette-netty-parser-0.8.1.jar;../../moquette/dsu/moquette-0.8.1/distribution/target/distribution-0.8.1-bundle-tar/lib/moquette-parser-commons-0.8.1.jar";
+
+transform v0.io.moquette.server.ConnectionDescriptor {
+	transformation {
+		ASSERT(session != null)
+		if (session instanceof v0.io.moquette.server.netty.NettyChannel) {
+			channel = session.m_channel.channel;
+		} else {
+			ASSERT(false);
+		}
+	}
+}
+
+transform v0.io.moquette.proto.messages.SubscribeMessage$Couple {
+	transformation {
+		qos = m_qos;
+		topicFilter = m_topicFilter; 
+	}
+}
+
+transform no-static-init v0.io.moquette.server.netty.NettyUtils {
+	static-transformation { 
+		v1.io.moquette.server.netty.NettyUtils.ATTR_USERNAME = "username";
+		v1.io.moquette.server.netty.NettyUtils.ATTR_SESSION_STOLEN = "sessionStolen";
+		print("Setting ATTR_KEY_KEEPALIVE to: ") 
+		println(v0.io.moquette.server.netty.NettyChannel.ATTR_KEY_KEEPALIVE);  
+		v1.io.moquette.server.netty.NettyUtils.ATTR_KEY_KEEPALIVE = v0.io.moquette.server.netty.NettyChannel.ATTR_KEY_KEEPALIVE;
+		v1.io.moquette.server.netty.NettyUtils.ATTR_KEY_CLEANSESSION = v0.io.moquette.server.netty.NettyChannel.ATTR_KEY_CLEANSESSION; 
+		v1.io.moquette.server.netty.NettyUtils.ATTR_KEY_CLIENTID = v0.io.moquette.server.netty.NettyChannel.ATTR_KEY_CLIENTID;
+		v1.io.moquette.server.netty.NettyUtils.ATTR_KEY_USERNAME = v0.io.moquette.server.netty.NettyChannel.ATTR_KEY_USERNAME;
+		v1.io.moquette.server.netty.NettyUtils.ATTR_KEY_SESSION_STOLEN = v0.io.moquette.server.netty.NettyChannel.ATTR_KEY_SESSION_STOLEN;
+	}
+}
+
+transform no-static-init v0.io.moquette.server.netty.metrics.BytesMetricsHandler {}
+transform no-static-init v0.io.moquette.server.netty.metrics.MessageMetricsHandler {}
+transform no-static-init v0.io.moquette.parser.netty.ConnectDecoder {}
+transform no-static-init v0.io.moquette.parser.netty.MQTTDecoder {}

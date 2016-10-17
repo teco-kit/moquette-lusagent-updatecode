@@ -1,0 +1,7 @@
+# Ignore any generated lusxf stuff
+/lusxf-namespaces/
+/src-gen/
+
+# Ignore any settings specific to eclipse-project
+/bin/
+/.settings/

@@ -1,0 +1,368 @@
+v0="../../moquette/dsu/moquette-0.7/distribution/target/distribution-0.7-bundle-tar/lib/moquette-broker-0.7.jar;../../moquette/dsu/moquette-0.7/distribution/target/distribution-0.7-bundle-tar/lib/moquette-netty-parser-0.7.jar;../../moquette/dsu/moquette-0.7/distribution/target/distribution-0.7-bundle-tar/lib/moquette-parser-commons-0.7.jar";
+v1="../../moquette/dsu/moquette-0.8/distribution/target/distribution-0.8-bundle-tar/lib/moquette-broker-0.8.jar;../../moquette/dsu/moquette-0.8/distribution/target/distribution-0.8-bundle-tar/lib/moquette-netty-parser-0.8.jar;../../moquette/dsu/moquette-0.8/distribution/target/distribution-0.8-bundle-tar/lib/moquette-parser-commons-0.8.jar";
+
+// transform v0.org.eclipse.moquette.server.ConfigurationParser -> null { } // --> Ok
+// transform v0.org.eclipse.moquette.spi.impl.AnnotationSupport -> null { } // --> Ok
+
+// transform v0.org.eclipse.moquette.spi.impl.subscriptions.TreeNode$ClientIDComparator -> null { } --> Ok because we reinit the subscriptions completly 
+// transform v0.org.eclipse.moquette.spi.impl.MQTTMessage -> null { } --> Ok because this is only an interface
+transform v0.org.eclipse.moquette.spi.impl.ValueEvent -> v1.io.moquette.spi.impl.SimpleMessaging.ValueEvent { } 
+transform v0.org.eclipse.moquette.spi.impl.ValueEvent$1 -> v1.io.moquette.spi.impl.SimpleMessaging$ValueEvent$1 { }
+transform v0.org.eclipse.moquette.spi.impl.events.ProtocolEvent -> v1.io.moquette.spi.impl.SimpleMessaging.ProtocolEvent {
+	transformation {
+		ctx = (m_session as v1.io.moquette.server.netty.NettyChannel).m_channel
+	}
+}
+
+// this renamings are located here because of there semantic connection to the patched new version
+transform v0.org.eclipse.moquette.spi.impl.events.LostConnectionEvent -> v1.io.moquette.spi.impl.SimpleMessaging.LostConnectionEvent { }
+transform v0.org.eclipse.moquette.spi.impl.events.StopEvent -> v1.io.moquette.spi.impl.SimpleMessaging.StopEvent { }
+transform v0.org.eclipse.moquette.spi.impl.events.MessagingEvent -> v1.io.moquette.spi.impl.SimpleMessaging.MessagingEvent { }
+transform v0.org.eclipse.moquette.spi.impl.events.PubAckEvent -> v1.io.moquette.spi.impl.SimpleMessaging.PubAckEvent { } 
+transform v0.org.eclipse.moquette.spi.impl.events.PublishEvent -> v1.io.moquette.spi.impl.SimpleMessaging.PublishEvent { }
+transform v0.org.eclipse.moquette.spi.impl.events.OutputMessagingEvent -> v1.io.moquette.spi.impl.SimpleMessaging.OutputMessagingEvent { }
+transform v0.org.eclipse.moquette.spi.impl.storage.StoredPublishEvent -> v1.io.moquette.spi.IMessagesStore.StoredMessage {
+	transformation {
+		ASSERT(false); // This stuff seems to be stored at off heap only.
+	}
+}
+
+transform v0.org.eclipse.moquette.proto.messages.ConnectMessage -> v1.io.moquette.proto.messages.ConnectMessage {
+        // No match for nonstatic B m_protocolVersion
+        // No match for nonstatic [B m_password
+        // No match for nonstatic [B m_willMessage
+        transformation {
+			m_protocolVersion = m_procotolVersion // renamed
+			m_password = o0.m_password.getBytes(java.nio.charset.Charset.forName("UTF-8")); // String -> byte[]
+			m_willMessage = o0.m_willMessage.getBytes(java.nio.charset.Charset.forName("UTF-8")); // String -> byte[]
+		}
+}
+transform v0.org.eclipse.moquette.server.netty.NettyAcceptor$2 -> v1.io.moquette.server.netty.NettyAcceptor$2 {
+        // No match for nonstatic Lio/moquette/server/netty/MoquetteIdleTimeoutHandler; val$timeoutHandler
+        transformation {
+        	val$timeoutHandler = new v1.io.moquette.server.netty.MoquetteIdleTimeoutHandler(); // new final directed into anonymous class
+        }
+}
+transform v0.org.eclipse.moquette.server.netty.NettyAcceptor$3 -> v1.io.moquette.server.netty.NettyAcceptor$3 {
+        // No match for nonstatic Lio/moquette/server/netty/MoquetteIdleTimeoutHandler; val$timeoutHandler
+        transformation {
+        	val$timeoutHandler = new v1.io.moquette.server.netty.MoquetteIdleTimeoutHandler(); // new final directed into anonymous class
+        }
+}
+transform v0.org.eclipse.moquette.server.netty.NettyAcceptor$4 -> v1.io.moquette.server.netty.NettyAcceptor$4 {
+        // No match for nonstatic Ljavax/net/ssl/SSLContext; val$sslContext
+        // No match for nonstatic Lio/moquette/server/netty/MoquetteIdleTimeoutHandler; val$timeoutHandler
+        transformation {
+        	ASSERT(false); // ssl connect not supported WONTFIX: Transformation incomplete
+        	//val$sslContext = o0.val$sslHandler.engine().sslContext
+        	//val$timeoutHandler = new v1.io.moquette.server.netty.MoquetteIdleTimeoutHandler();
+        }
+}
+transform v0.org.eclipse.moquette.spi.impl.ProtocolProcessor$1 -> v1.io.moquette.spi.impl.ProtocolProcessor$1 {
+        // No match for nonstatic Lio/moquette/spi/impl/subscriptions/Subscription; val$newSubscription
+        transformation {
+        	ASSERT(false);
+        }
+}
+
+
+transform v0.org.eclipse.moquette.server.netty.NettyMQTTHandler -> v1.io.moquette.server.netty.NettyMQTTHandler {
+        // No match for nonstatic Lio/moquette/spi/impl/ProtocolProcessor; m_processor
+        transformation {
+        	m_processor = collect(v1.io.moquette.spi.impl.ProtocolProcessor).get(0);
+        }
+}
+transform v0.org.eclipse.moquette.server.ConnectionDescriptor -> v1.io.moquette.server.ConnectionDescriptor {
+        // No match for nonstatic Ljava/lang/String; clientID
+        // No match for nonstatic Lio/moquette/server/ServerChannel; session  
+        // No match for nonstatic Z cleanSession
+        transformation {
+         	clientID = m_clientID; // renaming   
+         	session = m_session; // renaming
+         	cleanSession = m_cleanSession; // renaming
+        }
+}
+
+transform v0.org.eclipse.moquette.server.netty.NettyAcceptor$5 -> v1.io.moquette.server.netty.NettyAcceptor$5 {
+        // No match for nonstatic Ljavax/net/ssl/SSLContext; val$sslContext
+        // No match for nonstatic Lio/moquette/server/netty/MoquetteIdleTimeoutHandler; val$timeoutHandler
+        transformation {
+        	ASSERT(false);
+        }
+}
+transform v0.org.eclipse.moquette.spi.impl.subscriptions.TreeNode -> v1.io.moquette.spi.impl.subscriptions.TreeNode {
+		// Transformation of 2 v0.org.eclipse.moquette.spi.impl.subscriptions.TreeNode objects.
+        // No match for nonstatic Ljava/util/Set; m_subscriptions
+        transformation {
+        	// replacing a array list by a set
+        	val tmp = new java.util.HashSet<v1.io.moquette.spi.ISessionsStore$ClientTopicCouple>();
+        	val oldSubscriptions = o0.m_subscriptions;
+        	val len = oldSubscriptions.size;
+        	for (var i = 0; i < len; i++)
+        		tmp.add((oldSubscriptions.get(i) as java.lang.Object as v1.io.moquette.spi.impl.subscriptions.Subscription).asClientTopicCouple());
+        	m_subscriptions = tmp;
+        }
+}
+transform v0.org.eclipse.moquette.spi.impl.subscriptions.SubscriptionsStore -> v1.io.moquette.spi.impl.subscriptions.SubscriptionsStore {
+        // No match for nonstatic Ljava/util/concurrent/atomic/AtomicReference; subscriptions
+        transformation {
+        	subscriptions = new java.util.concurrent.atomic.AtomicReference(new v1.io.moquette.spi.impl.subscriptions.TreeNode());
+        }
+}
+
+
+
+//--------------------------------------------------------------------------------------------- Hilfslinie
+
+
+
+transform v0.org.eclipse.moquette.spi.persistence.MapDBPersistentStore -> v1.io.moquette.spi.persistence.MapDBPersistentStore { }
+transform v0.org.eclipse.moquette.spi.impl.ProtocolProcessor -> v1.io.moquette.spi.impl.ProtocolProcessor { transformation {
+	// No match for nonstatic Ljava/util/concurrent/ConcurrentMap; m_clientIDs
+	// No match for nonstatic Lio/moquette/spi/impl/BrokerInterceptor; m_interceptor
+	// No match for nonstatic Ljava/util/concurrent/ConcurrentMap; m_willStore
+    
+    println("Convert m_clientIDs to a ConcurrentHashMap.")
+   	m_clientIDs = new java.util.concurrent.ConcurrentHashMap(o0.m_clientIDs);
+   	
+   	println("Convert m_willStore to a ConcurrentHashMap.")
+   	m_willStore = new java.util.concurrent.ConcurrentHashMap(o0.m_willStore);
+   	
+   	println("Set the field m_interceptor ot v1.io.moquette.spi.impl.SimpleMessaging.instance.m_interceptor.");
+   	val interceptor = new v1.io.moquette.spi.impl.BrokerInterceptor(new java.util.ArrayList)
+   	v1.io.moquette.spi.impl.SimpleMessaging.instance.m_interceptor = interceptor
+    m_interceptor = interceptor;
+    
+    // -------------------------------------------------------
+    
+    println("Get the old MapDBPersistentStore and create a MapDBSessionsStore as well as a messagesStore");
+    val persistentStore = (o0.m_messagesStore as java.lang.Object) as v0.org.eclipse.moquette.spi.persistence.MapDBPersistentStore;
+    ASSERT(persistentStore instanceof v0.org.eclipse.moquette.spi.persistence.MapDBPersistentStore);
+    val db = persistentStore.m_db
+    val messagesStore = new v1.io.moquette.spi.persistence.MapDBMessagesStore(db);
+    
+    // -------------------------------------------------------
+    println("Init the fields of messageStore.")
+    
+    //map clientID <-> set of currently in flight packet identifiers
+    //private Map<String, Set<Integer>> m_inFlightIds;
+    val inFlightIds = persistentStore.m_inFlightIds;
+    messagesStore.m_inFlightIds = inFlightIds; // Hint: persistentStore is old. --> that's it --> good work
+    
+    
+    // new in messageStore is this:
+    //    maps topic -> guid
+    //    private ConcurrentMap<String, String> m_retainedStore;
+    
+    // old in persistentStore was this:
+    //    maps topic -> message
+    //    private ConcurrentMap<String, StoredMessage> m_retainedStore;
+    
+    
+    println("The old persistentStore.m_persistentMessageStore has " + new Integer(persistentStore.m_persistentMessageStore.size()).toString() + " entries."); // always 0?
+    
+    println("move the old persistedMessages to oldPersistedMessages");
+    db.rename("persistedMessages", "oldPersistedMessages");
+    
+    println("create the new persistedMessages");
+    messagesStore.m_persistentMessageStore = db.getHashMap("persistedMessages");
+    
+    println("copy " + new Integer(persistentStore.m_persistentMessageStore.size()).toString() + " entries from the old store to the new store.")
+    val persistentMessageStore = persistentStore.m_persistentMessageStore;
+    for(val it = persistentMessageStore.entrySet.iterator; it.hasNext();) {
+    	val entry = it.next();
+    	val clientID = entry.key;
+    	val storedPublishEvents = entry.value;
+    	for(val jt = storedPublishEvents.iterator; jt.hasNext();) {
+    		println("Transform a storedPublishEvent....");
+    		val storedPublishEvent = jt.next();
+    		val evt = new v1.io.moquette.spi.IMessagesStore$StoredMessage(storedPublishEvent.m_message, storedPublishEvent.m_qos, storedPublishEvent.m_topic);
+    		evt.m_retained = storedPublishEvent.m_retain; 
+    		evt.m_clientID = storedPublishEvent.m_clientID;
+    		evt.m_msgID = storedPublishEvent.m_msgID;
+    		messagesStore.storePublishForFuture(evt);
+    	}
+    }     
+    
+    
+    m_messagesStore = messagesStore;
+    
+    println("The old persistentStore.m_persistentSubscriptions has " + new Integer(persistentStore.m_persistentSubscriptions.size()).toString() + " entries.");
+    println("Use it to create the new MapDBSessionsStore")
+    val sessionsStore = new v1.io.moquette.spi.persistence.MapDBSessionsStore(db, messagesStore); // XXX2
+    m_sessionsStore = sessionsStore; 
+    
+    // -------------------------------------------------------
+    println("Init the fields of sessionsStore.")
+    
+    println("The old persistentStore.m_inflightStore has " + new Integer(persistentStore.m_inflightStore.size()).toString() + " entries. (FIXME: Transformation missing)");
+    // sessionsStore.m_inflightStore = persistentStore.m_inflightStore; // conversion from ConcurrentMap<String, StoredPublishEvent> to ConcurrentMap<String, Map<Integer, String>> ?! don't know how
+    ASSERT(persistentStore.m_inflightStore.size() == 0);
+    sessionsStore.m_inflightStore = db.getHashMap("inflight"); // TODO: FIXME!! 
+    
+    
+    println("The old persistentStore.m_inFlightIds has " + new Integer(persistentStore.m_inFlightIds.size()).toString() + " entries. (The transformation may be correct)");
+    ASSERT(persistentStore.m_inFlightIds.size() == 0); 
+    sessionsStore.m_inFlightIds = inFlightIds;
+    
+    val persistentSessions = db.getHashMap("sessions");
+    sessionsStore.m_persistentSessions = persistentSessions; // this is a new map init happens in the next for loop
+    sessionsStore.m_enqueuedStore = db.getHashMap("sessionQueue");
+    sessionsStore.m_secondPhaseStore = db.getHashMap("secondPhase");
+    
+    for (val it = persistentStore.m_persistentSubscriptions.entrySet.iterator; it.hasNext();) {
+    	val entry = it.next();
+    	sessionsStore.createNewSession(entry.key, true); // FIXME: is true correct?
+    	for (val jt = entry.value.iterator; jt.hasNext();) {
+			val subscription = jt.next();
+			sessionsStore.addNewSubscription(subscription as java.lang.Object as v1.io.moquette.spi.impl.subscriptions.Subscription);
+    	}
+    }
+    
+    subscriptions.init(sessionsStore);
+}}
+
+transform v0.org.eclipse.moquette.spi.impl.SimpleMessaging -> v1.io.moquette.spi.impl.SimpleMessaging { transformation {
+	// Transformation of 1 v0.org.eclipse.moquette.spi.persistence.MapDBPersistentStore objects.
+	// No match for nonstatic I m_autosaveInterval
+	// No match for nonstatic Ljava/util/concurrent/ScheduledExecutorService; m_scheduler
+	
+	// v0.org.eclipse.moquette.spi.impl.SimpleMessaging
+	// No match for nonstatic Lio/moquette/spi/persistence/MapDBPersistentStore; m_mapStorage --> handled
+	// No match for nonstatic Lio/moquette/spi/impl/BrokerInterceptor; m_interceptor --> handled
+	println("rename field m_storageService to m_mapStorage.");
+	println("m_storageService is a " + m_storageService.class.name);
+	// Alex FIXME: Ich glaube dieser Cast sollte vom Typesystem verboten sein: m_storageService as  v1.io.moquette.spi.persistence.MapDBPersistentStore;
+	//val v1.io.moquette.spi.persistence.MapDBPersistentStore persistentStore = m_storageService as v1.io.moquette.spi.persistence.MapDBPersistentStore;
+	val persistentStore = getNewObjectFromObjectCache(m_storageService as java.lang.Object as v0.org.eclipse.moquette.spi.persistence.MapDBPersistentStore) as v1.io.moquette.spi.persistence.MapDBPersistentStore;
+	m_mapStorage = persistentStore;
+	
+	//println("Create a new BrokerInterceptor and set it to m_interceptor.") // THIS HAS BEEN MOVED UP into the ProtocolProcessor transformation
+	//m_interceptor = new v1.io.moquette.spi.impl.BrokerInterceptor(new java.util.ArrayList); // initialize with a new interceptor
+	
+	println("Collect the first NettyMQTTHandler and set it to the field nettyMQTTHandler. (The new version has only one instance of it.)")
+	nettyMQTTHandler = collect(v1.io.moquette.server.netty.NettyMQTTHandler).get(0);
+	
+	println("Get the formarly created (see XXX2) sessionsStore and set it in the SubscriptionsStore.")
+	val sessionsStore = m_processor.m_sessionsStore
+	subscriptions.m_sessionsStore = sessionsStore
+}}
+
+
+//--------------------------------------------------------------------------------------------- Hilfslinie
+
+
+
+transform v0.org.eclipse.moquette.server.Server -> v1.io.moquette.server.Server {
+        // No match for nonstatic Z m_initialized
+        // No match for nonstatic Lio/moquette/spi/impl/ProtocolProcessor; m_processor
+        transformation { 
+        	m_initialized = true
+        	m_processor = collect(v1.io.moquette.spi.impl.ProtocolProcessor).get(0);
+        }
+}
+transform no-static-init v0.org.eclipse.moquette.server.netty.NettyChannel -> v1.io.moquette.server.netty.NettyChannel {
+	static-transformation {
+		v1.io.moquette.server.netty.NettyChannel.ATTR_SESSION_STOLEN = "sessionStolen"; // init regularly as clinit is disabled
+		v1.io.moquette.server.netty.NettyChannel.ATTR_KEY_SESSION_STOLEN = io.netty.util.AttributeKey.valueOf(v1.io.moquette.server.netty.NettyChannel.ATTR_SESSION_STOLEN); // init regularly as clinit is disabled
+	}
+	transformation {
+		println("Getting the pipeline.");
+		var pipeline = o0.m_channel.pipeline();
+		println("Check for a idleEventHandler.");
+		if (pipeline.names().contains("idleEventHandler")) {
+			println("Remove a idleEventHandler.");
+			pipeline.remove("idleEventHandler");
+		}
+	}  
+}
+
+transform v0.org.eclipse.moquette.commons.Constants -> v1.io.moquette.commons.Constants { }
+transform v0.org.eclipse.moquette.proto.MQTTException -> v1.io.moquette.proto.MQTTException { }
+transform v0.org.eclipse.moquette.proto.Utils -> v1.io.moquette.proto.Utils { }
+transform v0.org.eclipse.moquette.proto.messages.AbstractMessage -> v1.io.moquette.proto.messages.AbstractMessage { }
+transform v0.org.eclipse.moquette.proto.messages.ConnAckMessage -> v1.io.moquette.proto.messages.ConnAckMessage { }
+transform v0.org.eclipse.moquette.proto.messages.DisconnectMessage -> v1.io.moquette.proto.messages.DisconnectMessage { }
+transform v0.org.eclipse.moquette.proto.messages.MessageIDMessage -> v1.io.moquette.proto.messages.MessageIDMessage { }
+transform v0.org.eclipse.moquette.proto.messages.PingReqMessage -> v1.io.moquette.proto.messages.PingReqMessage { }
+transform v0.org.eclipse.moquette.proto.messages.PingRespMessage -> v1.io.moquette.proto.messages.PingRespMessage { }
+transform v0.org.eclipse.moquette.proto.messages.PubAckMessage -> v1.io.moquette.proto.messages.PubAckMessage { }
+transform v0.org.eclipse.moquette.proto.messages.PubCompMessage -> v1.io.moquette.proto.messages.PubCompMessage { }
+transform v0.org.eclipse.moquette.proto.messages.PubRecMessage -> v1.io.moquette.proto.messages.PubRecMessage { }
+transform v0.org.eclipse.moquette.proto.messages.PubRelMessage -> v1.io.moquette.proto.messages.PubRelMessage { }
+transform v0.org.eclipse.moquette.proto.messages.PublishMessage -> v1.io.moquette.proto.messages.PublishMessage { }
+transform v0.org.eclipse.moquette.proto.messages.SubAckMessage -> v1.io.moquette.proto.messages.SubAckMessage { }
+transform v0.org.eclipse.moquette.proto.messages.SubscribeMessage -> v1.io.moquette.proto.messages.SubscribeMessage { }
+transform v0.org.eclipse.moquette.proto.messages.UnsubAckMessage -> v1.io.moquette.proto.messages.UnsubAckMessage { }
+transform v0.org.eclipse.moquette.proto.messages.UnsubscribeMessage -> v1.io.moquette.proto.messages.UnsubscribeMessage { }
+transform v0.org.eclipse.moquette.proto.messages.ZeroLengthMessage -> v1.io.moquette.proto.messages.ZeroLengthMessage { }
+transform v0.org.eclipse.moquette.parser.netty.ConnAckDecoder -> v1.io.moquette.parser.netty.ConnAckDecoder { }
+transform v0.org.eclipse.moquette.parser.netty.ConnAckEncoder -> v1.io.moquette.parser.netty.ConnAckEncoder { }
+transform no-static-init v0.org.eclipse.moquette.parser.netty.ConnectDecoder -> v1.io.moquette.parser.netty.ConnectDecoder { }
+transform v0.org.eclipse.moquette.parser.netty.ConnectEncoder -> v1.io.moquette.parser.netty.ConnectEncoder { }
+transform v0.org.eclipse.moquette.parser.netty.DemuxDecoder -> v1.io.moquette.parser.netty.DemuxDecoder { }
+transform v0.org.eclipse.moquette.parser.netty.DemuxEncoder -> v1.io.moquette.parser.netty.DemuxEncoder { }
+transform v0.org.eclipse.moquette.parser.netty.DisconnectDecoder -> v1.io.moquette.parser.netty.DisconnectDecoder { }
+transform v0.org.eclipse.moquette.parser.netty.DisconnectEncoder -> v1.io.moquette.parser.netty.DisconnectEncoder { }
+transform v0.org.eclipse.moquette.parser.netty.MessageIDDecoder -> v1.io.moquette.parser.netty.MessageIDDecoder { }
+transform no-static-init v0.org.eclipse.moquette.parser.netty.MQTTDecoder -> v1.io.moquette.parser.netty.MQTTDecoder { }
+transform v0.org.eclipse.moquette.parser.netty.MQTTEncoder -> v1.io.moquette.parser.netty.MQTTEncoder { }
+transform v0.org.eclipse.moquette.parser.netty.PingReqDecoder -> v1.io.moquette.parser.netty.PingReqDecoder { }
+transform v0.org.eclipse.moquette.parser.netty.PingReqEncoder -> v1.io.moquette.parser.netty.PingReqEncoder { }
+transform v0.org.eclipse.moquette.parser.netty.PingRespDecoder -> v1.io.moquette.parser.netty.PingRespDecoder { }
+transform v0.org.eclipse.moquette.parser.netty.PingRespEncoder -> v1.io.moquette.parser.netty.PingRespEncoder { }
+transform v0.org.eclipse.moquette.parser.netty.PubAckDecoder -> v1.io.moquette.parser.netty.PubAckDecoder { }
+transform v0.org.eclipse.moquette.parser.netty.PubAckEncoder -> v1.io.moquette.parser.netty.PubAckEncoder { }
+transform v0.org.eclipse.moquette.parser.netty.PubCompDecoder -> v1.io.moquette.parser.netty.PubCompDecoder { }
+transform v0.org.eclipse.moquette.parser.netty.PubCompEncoder -> v1.io.moquette.parser.netty.PubCompEncoder { }
+transform v0.org.eclipse.moquette.parser.netty.PublishDecoder -> v1.io.moquette.parser.netty.PublishDecoder { }
+transform v0.org.eclipse.moquette.parser.netty.PublishEncoder -> v1.io.moquette.parser.netty.PublishEncoder { }
+transform v0.org.eclipse.moquette.parser.netty.PubRecDecoder -> v1.io.moquette.parser.netty.PubRecDecoder { }
+transform v0.org.eclipse.moquette.parser.netty.PubRecEncoder -> v1.io.moquette.parser.netty.PubRecEncoder { }
+transform v0.org.eclipse.moquette.parser.netty.PubRelDecoder -> v1.io.moquette.parser.netty.PubRelDecoder { }
+transform v0.org.eclipse.moquette.parser.netty.PubRelEncoder -> v1.io.moquette.parser.netty.PubRelEncoder { }
+transform v0.org.eclipse.moquette.parser.netty.SubAckDecoder -> v1.io.moquette.parser.netty.SubAckDecoder { }
+transform v0.org.eclipse.moquette.parser.netty.SubAckEncoder -> v1.io.moquette.parser.netty.SubAckEncoder { }
+transform v0.org.eclipse.moquette.parser.netty.SubscribeDecoder -> v1.io.moquette.parser.netty.SubscribeDecoder { }
+transform v0.org.eclipse.moquette.parser.netty.SubscribeEncoder -> v1.io.moquette.parser.netty.SubscribeEncoder { }
+transform v0.org.eclipse.moquette.parser.netty.UnsubAckDecoder -> v1.io.moquette.parser.netty.UnsubAckDecoder { }
+transform v0.org.eclipse.moquette.parser.netty.UnsubAckEncoder -> v1.io.moquette.parser.netty.UnsubAckEncoder { }
+transform v0.org.eclipse.moquette.parser.netty.UnsubscribeDecoder -> v1.io.moquette.parser.netty.UnsubscribeDecoder { }
+transform v0.org.eclipse.moquette.parser.netty.UnsubscribeEncoder -> v1.io.moquette.parser.netty.UnsubscribeEncoder { }
+transform v0.org.eclipse.moquette.parser.netty.Utils -> v1.io.moquette.parser.netty.Utils { }
+transform v0.org.eclipse.moquette.server.netty.metrics.BytesMetrics -> v1.io.moquette.server.netty.metrics.BytesMetrics { }
+transform v0.org.eclipse.moquette.server.netty.metrics.BytesMetricsCollector -> v1.io.moquette.server.netty.metrics.BytesMetricsCollector { }
+transform no-static-init v0.org.eclipse.moquette.server.netty.metrics.BytesMetricsHandler -> v1.io.moquette.server.netty.metrics.BytesMetricsHandler { }
+transform v0.org.eclipse.moquette.server.netty.metrics.MessageMetrics -> v1.io.moquette.server.netty.metrics.MessageMetrics { }
+transform v0.org.eclipse.moquette.server.netty.metrics.MessageMetricsCollector -> v1.io.moquette.server.netty.metrics.MessageMetricsCollector { }
+transform no-static-init v0.org.eclipse.moquette.server.netty.metrics.MessageMetricsHandler -> v1.io.moquette.server.netty.metrics.MessageMetricsHandler { }
+transform v0.org.eclipse.moquette.server.netty.MoquetteIdleTimoutHandler -> v1.io.moquette.server.netty.MoquetteIdleTimeoutHandler { } // renamed also to fix typo
+transform v0.org.eclipse.moquette.server.netty.NettyUtils -> v1.io.moquette.server.netty.NettyUtils { }  
+transform v0.org.eclipse.moquette.server.Constants -> v1.io.moquette.server.Constants { }
+transform v0.org.eclipse.moquette.spi.impl.security.ACLFileParser -> v1.io.moquette.spi.impl.security.ACLFileParser { }
+transform v0.org.eclipse.moquette.spi.impl.security.AcceptAllAuthenticator -> v1.io.moquette.spi.impl.security.AcceptAllAuthenticator { }
+transform v0.org.eclipse.moquette.spi.impl.security.Authorization -> v1.io.moquette.spi.impl.security.Authorization { }
+transform v0.org.eclipse.moquette.spi.impl.security.AuthorizationsCollector -> v1.io.moquette.spi.impl.security.AuthorizationsCollector { }
+transform v0.org.eclipse.moquette.spi.impl.security.DenyAllAuthorizator -> v1.io.moquette.spi.impl.security.DenyAllAuthorizator { } 
+transform v0.org.eclipse.moquette.spi.impl.security.FileAuthenticator -> v1.io.moquette.spi.impl.security.FileAuthenticator { }  
+transform v0.org.eclipse.moquette.spi.impl.security.IAuthenticator -> v1.io.moquette.spi.security.IAuthenticator { } // renamed also to move in packages 
+transform v0.org.eclipse.moquette.spi.impl.security.IAuthorizator -> v1.io.moquette.spi.security.IAuthorizator { } // renamed also to move in packages
+transform v0.org.eclipse.moquette.spi.impl.security.PermitAllAuthorizator -> v1.io.moquette.spi.impl.security.PermitAllAuthorizator { }
+transform v0.org.eclipse.moquette.spi.impl.security.Authorization$Permission -> v1.io.moquette.spi.impl.security.Authorization$Permission { }
+transform v0.org.eclipse.moquette.spi.impl.subscriptions.Token -> v1.io.moquette.spi.impl.subscriptions.Token { }
+transform v0.org.eclipse.moquette.proto.messages.SubscribeMessage$Couple -> v1.io.moquette.proto.messages.SubscribeMessage$Couple { }
+transform v0.org.eclipse.moquette.server.netty.NettyAcceptor$PipelineInitializer -> v1.io.moquette.server.netty.NettyAcceptor$PipelineInitializer { }
+transform v0.org.eclipse.moquette.server.netty.NettyAcceptor -> v1.io.moquette.server.netty.NettyAcceptor { }
+transform v0.org.eclipse.moquette.server.netty.NettyAcceptor$1 -> v1.io.moquette.server.netty.NettyAcceptor$1 { }
+transform v0.org.eclipse.moquette.spi.impl.subscriptions.SubscriptionsStore$DumpTreeVisitor -> v1.io.moquette.spi.impl.subscriptions.SubscriptionsStore$DumpTreeVisitor { }
+transform v0.org.eclipse.moquette.spi.impl.subscriptions.Subscription -> v1.io.moquette.spi.impl.subscriptions.Subscription { }
+transform v0.org.eclipse.moquette.spi.impl.ProtocolProcessor$WillMessage -> v1.io.moquette.spi.impl.ProtocolProcessor$WillMessage { }
+transform v0.org.eclipse.moquette.proto.messages.AbstractMessage$QOSType -> v1.io.moquette.proto.messages.AbstractMessage$QOSType { }
+transform v0.org.eclipse.moquette.server.ServerChannel -> v1.io.moquette.server.ServerChannel { }
+transform v0.org.eclipse.moquette.spi.impl.subscriptions.SubscriptionsStore$IVisitor -> v1.io.moquette.spi.impl.subscriptions.SubscriptionsStore$IVisitor { }
+transform v0.org.eclipse.moquette.spi.IMatchingCondition -> v1.io.moquette.spi.IMatchingCondition { }
+transform v0.org.eclipse.moquette.spi.ISessionsStore -> v1.io.moquette.spi.ISessionsStore { }
+transform v0.org.eclipse.moquette.spi.IMessagesStore -> v1.io.moquette.spi.IMessagesStore { }
+transform v0.org.eclipse.moquette.spi.IMessaging -> v1.io.moquette.spi.IMessaging { }
+transform v0.org.eclipse.moquette.server.ServerAcceptor -> v1.io.moquette.server.ServerAcceptor { }
+transform v0.org.eclipse.moquette.server.Server$1 -> v1.io.moquette.server.Server$1 { }
